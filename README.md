@@ -1,4 +1,4 @@
 # staticsitegen
 Static Site Generator Project
 
-Let's get this bread!
+Howdy! Let's build a site partner.
