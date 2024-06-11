@@ -11,10 +11,12 @@ class HTMLNode:
         raise NotImplementedError
     
     def props_to_html(self):
-        sentence = ""
+        if self.props is None:
+            return ""
+        props_html = ""
         for key, value in self.props.items():
-            sentence += f" {key}=\"{value}\""
-        return sentence
+            props_html += f" {key}=\"{value}\""
+        return props_html
     
     def __repr__(self):
         return f"HTMLnode(tag={self.tag}, value = {self.value}, children = {self.children}, props = {self.props})"
@@ -28,14 +30,26 @@ class LeafNode(HTMLNode):
         super().__init__(tag=tag, value=value, props=props)
 
     def to_html(self):
-        emptystring = ""
         if not self.value:
             raise ValueError("All leaf nodes require a value.")
         elif not self.tag:
             return self.value
-        elif not self.props:
-            return f"<{self.tag}>{self.value}</{self.tag}>"
-        else:
-            for key, value in self.props.items():
-                emptystring += f"<{self.tag}> {key}=\"{value}\">{self.value}</{self.tag}>"
-            return emptystring
+        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
+    
+    def __repr__(self):
+        return f"LeafNode(tag={self.tag}, value = {self.value}, props = {self.props})"
+    
+class ParentNode(HTMLNode):
+    def __init__(self, tag=None, children=None, props=None):
+        if tag is None:
+            raise ValueError("Tag must be provided.")
+        elif children is None:
+            raise ValueError("Children must be provided.")
+        super().__init__(tag=tag, value=None, children=children, props=props if props is not None else {})
+        
+    def to_html(self):
+        result = f"<{self.tag}{self.props_to_html()}>"
+        for child in self.children:
+            result += child.to_html()
+        return result + f"</{self.tag}>"
+
