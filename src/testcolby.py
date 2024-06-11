@@ -22,12 +22,17 @@
 #     ],
 # )
 
+
 # print(node.to_html())
+
+
+
 import re
+text2 = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
 text = "This is text with an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and ![another](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/dfsdkjfd.png)"
-matches = re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+matches = re.findall(r"!\[(.*?)\]\((.*?)\)", text2)
 print(matches)
 
-text2 = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
-matches2 = re.findall(r"\[(.*?)\]\((.*?)\)", text2)
-print(matches2)
+
+# matches2 = re.findall(r"\[(.*?)\]\((.*?)\)", text2)
+# print(matches2)
