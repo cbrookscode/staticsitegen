@@ -17,7 +17,7 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_no_value(self):
         with self.assertRaises(ValueError) as context:
-            LeafNode("p", "", {"href": "https://www.google.com"})
+            LeafNode("p", None, {"href": "https://www.google.com"})
         self.assertEqual(str(context.exception), "Value required for LeafNode")
 
     def test_no_props(self):
