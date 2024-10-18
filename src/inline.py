@@ -1,5 +1,7 @@
 from textnode import TextNode
 
+import re
+
 valid_delimeters = ["text", "bold", "italic", "code", "link", "image"]
 
 
@@ -28,3 +30,43 @@ def split_nodes_delimeter(old_nodes, delimiter, text_type):
     if count == 0:
         raise Exception("invalid markdown syntax")
     return new_list
+
+
+
+def extract_markdown_images(text):
+    return re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
+def extract_markdown_links(text):
+    return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
+def split_nodes_images(old_nodes):
+    if text_type not in valid_delimeters:
+        raise Exception("Not a valid text type")
+    if not old_nodes:
+        raise Exception("Cannot provide an empty node list")
+    list = []
+    for node in old_nodes:
+        images = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", node.text)
+        remaining_text = node.text
+        for image in images:
+            split = remaining_text.split(f"[{image[0]}]({image[1]})", 1)
+            alt_text = image[0]
+            url = image[1]
+            list.append(TextNode(split[0][:-1], "text"))
+            list.append(TextNode(alt_text, "image", url))
+            remaining_text = split[1]
+    return list
+
+def split_nodes_links(old_nodes):
+    list = []
+    for node in old_nodes:
+        links = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", node.text)
+        remaining_text = node.text
+        for link in links:
+            split = remaining_text.split(f"[{link[0]}]({link[1]})", 1)
+            alt_text = link[0]
+            url = link[1]
+            list.append(TextNode(split[0], "text"))
+            list.append(TextNode(alt_text, "link", url))
+            remaining_text = split[1]
+    return list
