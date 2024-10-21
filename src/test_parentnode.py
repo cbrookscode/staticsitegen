@@ -52,10 +52,15 @@ node3 = ParentNode(
 class TestHTMLNode(unittest.TestCase):
 
     def test_standard_parent_with_only_leaf_children(self):
-        print(f"Test standard parent with only leaf children to html method: {node.to_html()}")
+        result = node.to_html()
+        expected = "<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_nested_parent_nodes_along_with_leaf_children(self):
-        print(f"Test parent to html method with nested parents in children: {node2.to_html()}")
+        result = node2.to_html()
+        expected = "<p><b>Bold text</b><p>second level</p><p>3rd level<i>italic text</i>3rd level</p></p>"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
     
     def test_no_children(self):
         with self.assertRaises(ValueError) as context:
@@ -70,4 +75,6 @@ class TestHTMLNode(unittest.TestCase):
             ParentNode()
 
     def test_parent_node_with_nested_props(self):
-        print(f"Test having props nested in parent: {node3.to_html()}")
+        result = node3.to_html()
+        expected = '<p>href="https://www.test2.com"<b>Bold text</b><p>href="https://www.test.com"second level</p><p>3rd level<i href="https://www.google.com">italic text</i>3rd level</p></p>'
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")

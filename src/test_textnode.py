@@ -42,32 +42,44 @@ class TestTextNode(unittest.TestCase):
     def test_text_text_type(self):
         node = TextNode("This is a text node", "text")
         new_leaf = node.text_node_to_html_node()
-        print(f"Testing textnode to htmlnode with (text) text type: {new_leaf.to_html()}")
+        result = new_leaf.to_html()
+        expected = "This is a text node"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_bold_text_type(self):
         node = TextNode("This is a text node", "bold")
         new_leaf = node.text_node_to_html_node()
-        print(f"Testing textnode to htmlnode with (bold) text type: {new_leaf.to_html()}")
+        result = new_leaf.to_html()
+        expected = "<b>This is a text node</b>"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_italic_text_type(self):
         node = TextNode("This is a text node", "italic")
         new_leaf = node.text_node_to_html_node()
-        print(f"Testing textnode to htmlnode with (italic) text type: {new_leaf.to_html()}")
+        result = new_leaf.to_html()
+        expected = "<i>This is a text node</i>"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_code_text_type(self):
         node = TextNode("This is a text node", "code")
         new_leaf = node.text_node_to_html_node()
-        print(f"Testing textnode to htmlnode with (code) text type: {new_leaf.to_html()}")
+        result = new_leaf.to_html()
+        expected = "<code>This is a text node</code>"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_link_text_type(self):
         node = TextNode("this is a link", "link", "https://google.com")
         new_leaf = node.text_node_to_html_node()
-        print(f"Testing textnode to htmlnode with (link) text type: {new_leaf.to_html()}")
+        result = new_leaf.to_html()
+        expected = '<a href="https://google.com">this is a link</a>'
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_image_text_type(self):
         node = TextNode("This is an image", "image", "https://image.com")
         new_leaf = node.text_node_to_html_node()
-        print(f"Testing textnode to htmlnode with (image) text type: {new_leaf.to_html()}")
+        result = new_leaf.to_html()
+        expected = '<img src="https://image.com" alt="This is an image"></img>'
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
         
 if __name__ == "__main__":
     unittest.main()

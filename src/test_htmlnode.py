@@ -27,7 +27,9 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_props_to_html(self):
         testhtml= HTMLNode(tag="pear", value="a", props=dict)
-        print(f"Props to html function test w/ htmlnode class: {testhtml.props_to_html()}")
+        result = testhtml.props_to_html()
+        expected = 'href="https://www.google.com" target="_blank"'
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_props_to_html_with_no_props(self):
         node= HTMLNode(tag="pear", value="a")
@@ -38,6 +40,8 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_repr(self):
         testhtml= HTMLNode(tag="pear", value="a", props=dict)
-        print(f"HTMLNode repr function test: {testhtml.__repr__()}")
+        result = testhtml.__repr__()
+        expected = f'{HTMLNode("pear", "a", None, {'href': 'https://www.google.com', 'target': '_blank'})}'
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     

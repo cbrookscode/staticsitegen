@@ -10,10 +10,14 @@ leaf3 = LeafNode("", "TestValue")
 class TestHTMLNode(unittest.TestCase):
 
     def test_normal_leaf_to_html(self):
-        print(f"To Html leafnode method test with normal leaf provided: {leaf.to_html()}")
+        result = leaf.to_html()
+        expected = '<a href="https://www.google.com">Click me!</a>'
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_no_tag(self):
-        print(f"To Html leafnode method test with no tag provided: {leaf3.to_html()}")
+        result = leaf3.to_html()
+        expected = "TestValue"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_no_value(self):
         with self.assertRaises(ValueError) as context:
@@ -21,7 +25,9 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(str(context.exception), "Value required for LeafNode")
 
     def test_no_props(self):
-        print(f"To Html leafnode method test with no props dict provided: {leaf3.to_html()}")
+        result = leaf3.to_html()
+        expected = "TestValue"
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
     def test_empty_leaf_construction(self):
         with self.assertRaises(ValueError) as context:

@@ -40,27 +40,60 @@ def extract_markdown_links(text):
     return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
 
 def split_nodes_images(old_nodes):
-    if text_type not in valid_delimeters:
-        raise Exception("Not a valid text type")
     if not old_nodes:
         raise Exception("Cannot provide an empty node list")
     list = []
     for node in old_nodes:
+        # check if node is empty
+        if not node:
+            continue
+        #check if node is a 'text' text-type
+        if node.text_type != "text":
+            list.append(node)
+            continue
+
         images = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", node.text)
+
+        #check if images found in text
+        if not images:
+            list.append(node)
+            continue
+
         remaining_text = node.text
         for image in images:
-            split = remaining_text.split(f"[{image[0]}]({image[1]})", 1)
+            split = remaining_text.split(f"![{image[0]}]({image[1]})", 1)
             alt_text = image[0]
             url = image[1]
-            list.append(TextNode(split[0][:-1], "text"))
+            list.append(TextNode(split[0], "text"))
             list.append(TextNode(alt_text, "image", url))
+
+            #update variable to only include remainder of text left
             remaining_text = split[1]
+    if not list:
+        return old_nodes
     return list
 
 def split_nodes_links(old_nodes):
+    if not old_nodes:
+        raise Exception("Cannot provide an empty node list")
     list = []
     for node in old_nodes:
+         # check if node is empty
+        if not node:
+            continue
+
+        # check if node is a 'text' text-type
+        if node.text_type != "text":
+            list.append(node)
+            continue
+
         links = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", node.text)
+
+        #check if links found in text
+        if not links:
+            list.append(node)
+            continue
+
         remaining_text = node.text
         for link in links:
             split = remaining_text.split(f"[{link[0]}]({link[1]})", 1)
@@ -69,4 +102,6 @@ def split_nodes_links(old_nodes):
             list.append(TextNode(split[0], "text"))
             list.append(TextNode(alt_text, "link", url))
             remaining_text = split[1]
+    if not list:
+        return old_nodes
     return list
