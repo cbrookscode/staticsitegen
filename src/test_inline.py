@@ -212,8 +212,40 @@ split_links = [
     TextNode("This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)", "text",), 
     TextNode("This is text2 with a link2 [to boot dev2](https://www.boot.dev2) and2 [to youtube2](https://www.youtube.com/@bootdotdev2)", "text",)
     ]
+
+split_links_empty = []
+
+split_links_no_links = [
+    TextNode("This is text with no link and nothing.", "text",), 
+    TextNode("This is text2 with nothing and2 nothing!!", "code",)
+    ]
+
+split_links_nontext_textnode = [
+    TextNode("This is text with a links ![to boot dev](https://i.imgur.com/aKaOqIh.gif) and ![to youtube](https://i.imgur.com/fJRm4Vk.jpeg)", "code",), 
+    TextNode("This is text2 with a links2 ![to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "italic",)
+    ]
+
+split_links_mixed_texttypes = [
+    TextNode("This is text with a link[to boot dev](https://i.imgur.com/aKaOqIh.gif) and [to youtube](https://i.imgur.com/fJRm4Vk.jpeg)", "text",), 
+    TextNode("This is text2 with a link2 [to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 [to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "code",)
+    ]
+
+split_links_with_exclamations = [
+    TextNode("This is text with a link ![to boot dev](https://i.imgur.com/aKaOqIh.gif) and ![to youtube](https://i.imgur.com/fJRm4Vk.jpeg)", "text",), 
+    TextNode("This is text2 with a ilink2 ![to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "text",)
+    ]
+
+split_links_mixed_weirdness = [
+    TextNode("This is text with a link [to boot dev](https://i.imgur.com/aKaOqIh.gif) and [to youtube](https://i.imgur.com/fJRm4Vk.jpeg)", "text",), 
+    TextNode("This is text2 with a ilink2 ![to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "code",),
+    TextNode("This is text with no link and nothing.", "text",),
+    TextNode("This is text2 with a ilink2 and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "text",),
+    "",
+    ]
+
+
 class TestSplitLinks(unittest.TestCase):
-    def test_split_nodes_links_normal(self):
+    def test_split_links_normal(self):
         result = split_nodes_links(split_links)
         expected = [
         TextNode("This is text with a link ", "text", None),
@@ -224,5 +256,58 @@ class TestSplitLinks(unittest.TestCase):
         TextNode("to boot dev2", "link", "https://www.boot.dev2"),
         TextNode(" and2 ", "text", None),
         TextNode("to youtube2", "link", "https://www.youtube.com/@bootdotdev2")
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+    
+    def test_split_links_empty_list(self):
+        with self.assertRaises(Exception) as context:
+            split_nodes_links(split_links_empty)
+        self.assertEqual(str(context.exception), "Cannot provide an empty node list")
+
+    def test_split_links_no_links(self):
+        result = split_nodes_links(split_links_no_links)
+        expected = [
+        TextNode("This is text with no link and nothing.", "text", None),
+        TextNode("This is text2 with nothing and2 nothing!!", "code", None)
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+    
+    def test_split_links_none_text_textnode(self):
+        result = split_nodes_links(split_links_nontext_textnode)
+        expected = [
+        TextNode("This is text with a links ![to boot dev](https://i.imgur.com/aKaOqIh.gif) and ![to youtube](https://i.imgur.com/fJRm4Vk.jpeg)", "code", None),
+        TextNode("This is text2 with a links2 ![to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "italic", None)
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+    
+    def test_split_links_mixed_texttypes(self):
+        result = split_nodes_links(split_links_mixed_texttypes)
+        expected = [
+        TextNode("This is text with a link", "text", None),
+        TextNode("to boot dev", "link", "https://i.imgur.com/aKaOqIh.gif"),
+        TextNode(" and ", "text", None),
+        TextNode("to youtube", "link", "https://i.imgur.com/fJRm4Vk.jpeg"),
+        TextNode("This is text2 with a link2 [to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 [to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "code", None)
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_split_links_with_excalmations(self):
+        result = split_nodes_links(split_links_with_exclamations)
+        expected = [
+        TextNode("This is text with a link ![to boot dev](https://i.imgur.com/aKaOqIh.gif) and ![to youtube](https://i.imgur.com/fJRm4Vk.jpeg)", "text", None),
+        TextNode("This is text2 with a ilink2 ![to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "text", None)
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_split_links_mix_weirdness(self):
+        result = split_nodes_links(split_links_mixed_weirdness)
+        expected = [
+        TextNode("This is text with a link ", "text", None),
+        TextNode("to boot dev", "link", "https://i.imgur.com/aKaOqIh.gif"),
+        TextNode(" and ", "text", None),
+        TextNode("to youtube", "link", "https://i.imgur.com/fJRm4Vk.jpeg"),
+        TextNode("This is text2 with a ilink2 ![to boot dev2](https://i.imgur.com/aKaOqIh.gif2) and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "code", None),
+        TextNode("This is text with no link and nothing.", "text", None),
+        TextNode("This is text2 with a ilink2 and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "text", None)
         ]
         self.assertEqual(result, expected, f"Expected {expected} but got {result}")
