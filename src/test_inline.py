@@ -39,7 +39,7 @@ class TestSplitwDelimeter(unittest.TestCase):
     
     def test_mixed_nodes(self):
         result = split_nodes_delimeter(node2, "`", "code")
-        expected = [TextNode("This is text ", "text", None), TextNode("with", "code", None), TextNode(" a word", "text", None), TextNode("how *now* brown cow", "italic", None)]
+        expected = [TextNode("This is text ", "text", None), TextNode("with", "code", None), TextNode(" a word", "text", None), TextNode("testing", "text", None), TextNode("how *now* brown cow", "italic", None)]
         self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
 
