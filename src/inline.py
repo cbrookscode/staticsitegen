@@ -1,5 +1,5 @@
 from textnode import TextNode
-
+from functools import reduce
 import re
 
 valid_delimeters = ["text", "bold", "italic", "code", "link", "image"]
@@ -21,32 +21,50 @@ def split_nodes_delimeter(old_nodes, delimiter, text_type):
             continue
 
         buffer = ""
+        buffer2 = ""
         delim_count = 0
         inside_delimeter = False
         i = 0
+        # [TextNode("This is text **with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "text")]
+        # need to figure out who to accomplish italics and bolded without interfering with one another.
         while i < len(node.text):
             if node.text[i: i + len(delimiter)] == delimiter:
+                if delimiter == "*":
+                    if node.text[i + 1] == "*" or  node.text[i-1] == "*":
+                        buffer += node.text[i]
+                        i += 1
                 if buffer and not inside_delimeter:
-                    new_list.append(TextNode(buffer, "text"))
+                    buffer2 = buffer
                     buffer = ""
                 inside_delimeter = True
                 delim_count += 1
                 if delim_count == 2:
-                    new_list.append(TextNode(buffer, text_type))
-                    buffer = ""
-                    delim_count = 0
-                    inside_delimeter = False
-                    # delimeter was in string.
-                    count += 1
+                    if delimiter ==  "*" and node.text[i + 1] == "*":
+                        delim_count -= 1
+                        i += 1
+                    else:
+                        new_list.append(TextNode(buffer2, "text"))
+                        new_list.append(TextNode(buffer, text_type))
+                        buffer = ""
+                        delim_count = 0
+                        inside_delimeter = False
+                        # delimeter was in string.
+                        count += 1
                 i += len(delimiter)
             else:
                 buffer += node.text[i]
                 i += 1
-        new_list.append(TextNode(buffer, "text"))
+        if delim_count == 1:
+            new_list.append(TextNode(buffer2 + buffer, "text"))
+        else:
+            new_list.append(TextNode(buffer, "text"))
     if count == 0:
-        raise Exception("invalid markdown syntax")
+        return old_nodes
     return new_list
 
+
+print(split_nodes_delimeter([TextNode("This is text **with** a word", "text")], "*", "italic"))
+print(split_nodes_delimeter([TextNode("This is text **with** a word", "text")], "**", "bold"))
     
 
 
@@ -78,15 +96,20 @@ def split_nodes_images(old_nodes):
             continue
 
         remaining_text = node.text
-        for image in images:
-            split = remaining_text.split(f"![{image[0]}]({image[1]})", 1)
-            alt_text = image[0]
-            url = image[1]
-            list.append(TextNode(split[0], "text"))
-            list.append(TextNode(alt_text, "image", url))
-
-            #update variable to only include remainder of text left
-            remaining_text = split[1]
+        i = 0
+        while i < 1:
+            for image in images:
+                split = remaining_text.split(f"![{image[0]}]({image[1]})", 1)
+                if len(split) > 1:
+                    alt_text = image[0]
+                    url = image[1]
+                    list.append(TextNode(split[0], "text"))
+                    list.append(TextNode(alt_text, "image", url))
+                    remaining_text = split[1]
+                else:
+                    if split[0]:
+                        list.append(TextNode(split[0], "text"))
+                    i += 1
     if not list:
         return old_nodes
     return list
@@ -113,28 +136,27 @@ def split_nodes_links(old_nodes):
             continue
 
         remaining_text = node.text
-        for link in links:
-            split = remaining_text.split(f"[{link[0]}]({link[1]})", 1)
-            alt_text = link[0]
-            url = link[1]
-            list.append(TextNode(split[0], "text"))
-            list.append(TextNode(alt_text, "link", url))
-            remaining_text = split[1]
+        i = 0
+        while i < 1:
+            for link in links:
+                split = remaining_text.split(f"[{link[0]}]({link[1]})", 1)
+                if len(split) > 1:
+                    alt_text = link[0]
+                    url = link[1]
+                    list.append(TextNode(split[0], "text"))
+                    list.append(TextNode(alt_text, "link", url))
+                    remaining_text = split[1]
+                else:
+                    if split[0]:
+                        list.append(TextNode(split[0], "text"))
+                i += 1
     if not list:
         return old_nodes
     return list
 
 
-Markdown_text = "This is **text** with an *italic* word **and** a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
-
-# valid_delimeters = ["text", "bold", "italic", "code", "link", "image"]
 def text_to_textnodes(text):
+    if not text:
+        raise Exception("No text provided to convert")
     textnode_list = [TextNode(text, "text")]
-    textnode_list = split_nodes_delimeter(textnode_list, "**", "bold")
-    textnode_list = split_nodes_delimeter(textnode_list, "*", "italic")
-    textnode_list = split_nodes_delimeter(textnode_list, "`", "code")
-    textnode_list = split_nodes_images(textnode_list)
-    textnode_list = split_nodes_links(textnode_list)
-    return textnode_list
-
-print(text_to_textnodes(Markdown_text))
+    return split_nodes_links(split_nodes_images(split_nodes_delimeter(split_nodes_delimeter(split_nodes_delimeter(textnode_list, "**", "bold"), "*", "italic"), "`", "code")))

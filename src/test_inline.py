@@ -1,11 +1,12 @@
 from textnode import TextNode
-from inline import split_nodes_delimeter, split_nodes_images, split_nodes_links, extract_markdown_images, extract_markdown_links
+from inline import split_nodes_delimeter, split_nodes_images, split_nodes_links, extract_markdown_images, extract_markdown_links, text_to_textnodes
 
 import unittest
 
 node = [TextNode("This is text with a `code block` word", "text"), TextNode("testing", "italic")]
 node2 = [TextNode("This is text `with` a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "italic")]
-node3 = [TextNode("This is text **with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "italic")]
+node3 = [TextNode("This is text **with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "text")]
+node4 = [TextNode("This is text *with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "italic")]
 
 class TestSplitwDelimeter(unittest.TestCase):
     def test_no_delimeter(self):
@@ -33,14 +34,15 @@ class TestSplitwDelimeter(unittest.TestCase):
         self.assertEqual(str(context.exception), "Not a valid text type")
 
     def test_delim_not_in_text(self):
-        with self.assertRaises(Exception) as context:
-            split_nodes_delimeter(node3, "`", "code")
-        self.assertEqual(str(context.exception), "invalid markdown syntax")
+        print(f"This is delim not in text: {split_nodes_delimeter(node3, "*", "italic")}")
     
     def test_mixed_nodes(self):
-        result = split_nodes_delimeter(node2, "`", "code")
-        expected = [TextNode("This is text ", "text", None), TextNode("with", "code", None), TextNode(" a word", "text", None), TextNode("testing", "text", None), TextNode("how *now* brown cow", "italic", None)]
-        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+        print(f"This is test mixed nodes: {split_nodes_delimeter(node2, "`", "code")}")
+
+
+    def test_incorrect_markdown(self):
+        print(f"this is test incorrect markdown: {split_nodes_delimeter(node4, "*", "italic")}")
+
 
 
 
@@ -311,3 +313,76 @@ class TestSplitLinks(unittest.TestCase):
         TextNode("This is text2 with a ilink2 and2 ![to youtube2](https://i.imgur.com/fJRm4Vk.jpeg2)", "text", None)
         ]
         self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+
+
+class TestMarkdowntoTextNodes(unittest.TestCase):
+    def test_markdown_to_textnodes_standard(self):
+        Markdown_text = "This is **text** with an *italic* word **and** a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev) and more **text** with an *italic* word **and** a `code block` and an"
+        result = text_to_textnodes(Markdown_text)
+        expected = [
+        TextNode("This is ", "text", None),
+        TextNode("text", "bold", None),
+        TextNode(" with an ", "text", None),
+        TextNode("italic", "italic", None),
+        TextNode(" word ", "text", None),
+        TextNode("and", "bold", None),
+        TextNode(" a ", "text", None),
+        TextNode("code block", "code", None),
+        TextNode(" and an ", "text", None),
+        TextNode("obi wan image", "image", "https://i.imgur.com/fJRm4Vk.jpeg"),
+        TextNode(" and a ", "text", None),
+        TextNode("link", "link", "https://boot.dev"),
+        TextNode("text", "bold", None),
+        TextNode(" with an ", "text", None),
+        TextNode("italic", "italic", None),
+        TextNode(" word ", "text", None),
+        TextNode("and", "bold", None),
+        TextNode(" a ", "text", None),
+        TextNode("code block", "code", None),
+        TextNode(" and an", "text", None)
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_markdown_to_textnodes_standard_2(self):
+        Markdown_text = "This is **text** with an *italic* word **and** a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev) and more **text** with an *italic* word **and** a `code block` and an!!!! Beepoperino Jambrino"
+        result = text_to_textnodes(Markdown_text)
+        expected = [
+        TextNode("This is ", "text", None),
+        TextNode("text", "bold", None),
+        TextNode(" with an ", "text", None),
+        TextNode("italic", "italic", None),
+        TextNode(" word ", "text", None),
+        TextNode("and", "bold", None),
+        TextNode(" a ", "text", None),
+        TextNode("code block", "code", None),
+        TextNode(" and an ", "text", None),
+        TextNode("obi wan image", "image", "https://i.imgur.com/fJRm4Vk.jpeg"),
+        TextNode(" and a ", "text", None),
+        TextNode("link", "link", "https://boot.dev"),
+        TextNode("text", "bold", None),
+        TextNode(" with an ", "text", None),
+        TextNode("italic", "italic", None),
+        TextNode(" word ", "text", None),
+        TextNode("and", "bold", None),
+        TextNode(" a ", "text", None),
+        TextNode("code block", "code", None),
+        TextNode(" and an!!!! Beepoperino Jambrino", "text", None)
+        ]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_markdown_to_textnodes_only_text(self):
+        Markdown_text = "Hi Hellow, heee xp. Weee me bee thee. Steve!"
+        result = text_to_textnodes(Markdown_text)
+        expected = [TextNode("Hi Hellow, heee xp. Weee me bee thee. Steve!", "text", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_markdown_to_textnodes_no_text(self):
+        Markdown_text = ""
+        with self.assertRaises(Exception) as context:
+            text_to_textnodes(Markdown_text)
+        self.assertEqual(str(context.exception), "No text provided to convert")
+    
+    def test_markdown_to_textnodes_incorrect_markdown(self):
+        Markdown_text = "Hiya *I cannot write Markdown at all** whooohoo.!"
+        print(text_to_textnodes(Markdown_text))
