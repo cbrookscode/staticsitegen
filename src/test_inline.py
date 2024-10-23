@@ -4,8 +4,8 @@ from inline import split_nodes_delimeter, split_nodes_images, split_nodes_links,
 import unittest
 
 node = [TextNode("This is text with a `code block` word", "text"), TextNode("testing", "italic")]
-node2 = [TextNode("This is text `with` a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "italic")]
-node3 = [TextNode("This is text **with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "text")]
+node2 = [TextNode("This is text `with` a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "text")]
+node3 = [TextNode("This is text **with** a word", "text"), TextNode("testing", "text"), TextNode("how now brown cow", "text")]
 node4 = [TextNode("This is text *with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "italic")]
 
 class TestSplitwDelimeter(unittest.TestCase):
@@ -34,15 +34,20 @@ class TestSplitwDelimeter(unittest.TestCase):
         self.assertEqual(str(context.exception), "Not a valid text type")
 
     def test_delim_not_in_text(self):
-        print(f"This is delim not in text: {split_nodes_delimeter(node3, "*", "italic")}")
+        result = split_nodes_delimeter(node3, "*", "italic")
+        expected = [TextNode("This is text **with** a word", "text", None), TextNode("testing", "text", None), TextNode("how now brown cow", "text", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
     
     def test_mixed_nodes(self):
-        print(f"This is test mixed nodes: {split_nodes_delimeter(node2, "`", "code")}")
+        result = split_nodes_delimeter(node2, "`", "code")
+        expected = [TextNode("This is text ", "text", None), TextNode("with", "code", None), TextNode(" a word", "text", None), TextNode("testing", "text", None), TextNode("how *now* brown cow", "text", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
 
     def test_incorrect_markdown(self):
-        print(f"this is test incorrect markdown: {split_nodes_delimeter(node4, "*", "italic")}")
-
+        result = split_nodes_delimeter(node4, "*", "italic")
+        expected = [TextNode("This is text *with** a word", "text", None), TextNode("testing", "text", None), TextNode("how *now* brown cow", "italic", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
 
 
 
@@ -385,4 +390,18 @@ class TestMarkdowntoTextNodes(unittest.TestCase):
     
     def test_markdown_to_textnodes_incorrect_markdown(self):
         Markdown_text = "Hiya *I cannot write Markdown at all** whooohoo.!"
-        print(text_to_textnodes(Markdown_text))
+        result = text_to_textnodes(Markdown_text)
+        expected = [TextNode("Hiya *I cannot write Markdown at all** whooohoo.!", "text", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_text_to_textnodes_2(self):
+        Markdown = "**Hiya** *I cannot *write* Markdown at all** `whooohoo.!`*"
+        result = text_to_textnodes(Markdown)
+        expected = [TextNode("Hiya", "bold", None), TextNode(" ", "text", None), TextNode("I cannot ", "italic", None), TextNode("write", "text", None), TextNode(" Markdown at all `whooohoo.!`", "italic", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")
+
+    def test_text_to_textnodes_3(self):
+        Markdown = "**Hiya** *I cannot **write** Markdown at all** `whooohoo.!`*"
+        result = text_to_textnodes(Markdown)
+        expected = [TextNode("Hiya", 'bold', None), TextNode(" *I cannot ", "text", None), TextNode("write", "bold", None), TextNode(" Markdown at all ", "text", None), TextNode("whooohoo.!", "code", None), TextNode("*", "text", None)]
+        self.assertEqual(result, expected, f"Expected {expected} but got {result}")

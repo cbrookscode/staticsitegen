@@ -25,25 +25,27 @@ def split_nodes_delimeter(old_nodes, delimiter, text_type):
         delim_count = 0
         inside_delimeter = False
         i = 0
-        # [TextNode("This is text **with** a word", "text"), TextNode("testing", "text"), TextNode("how *now* brown cow", "text")]
-        # need to figure out who to accomplish italics and bolded without interfering with one another.
+
         while i < len(node.text):
             if node.text[i: i + len(delimiter)] == delimiter:
                 if delimiter == "*":
-                    if node.text[i + 1] == "*" or  node.text[i-1] == "*":
-                        buffer += node.text[i]
-                        i += 1
+                    if i + 1 < len(node.text) and node.text[i + 1] == "*":
+                        # This means we're dealing with "**" (bold), so we skip it
+                        buffer += "**"  # Add the double asterisks to the buffer as plain text
+                        i += 2  # Skip both asterisks
+                        continue  # Move to the next iteration
                 if buffer and not inside_delimeter:
                     buffer2 = buffer
                     buffer = ""
                 inside_delimeter = True
                 delim_count += 1
                 if delim_count == 2:
-                    if delimiter ==  "*" and node.text[i + 1] == "*":
+                    if delimiter ==  "*" and i + 1 < len(node.text) and node.text[i + 1] == "*":
                         delim_count -= 1
                         i += 1
                     else:
-                        new_list.append(TextNode(buffer2, "text"))
+                        if buffer2:
+                            new_list.append(TextNode(buffer2, "text"))
                         new_list.append(TextNode(buffer, text_type))
                         buffer = ""
                         delim_count = 0
@@ -57,16 +59,11 @@ def split_nodes_delimeter(old_nodes, delimiter, text_type):
         if delim_count == 1:
             new_list.append(TextNode(buffer2 + buffer, "text"))
         else:
-            new_list.append(TextNode(buffer, "text"))
+            if buffer:
+                new_list.append(TextNode(buffer, "text"))
     if count == 0:
         return old_nodes
     return new_list
-
-
-print(split_nodes_delimeter([TextNode("This is text **with** a word", "text")], "*", "italic"))
-print(split_nodes_delimeter([TextNode("This is text **with** a word", "text")], "**", "bold"))
-    
-
 
 
 def extract_markdown_images(text):
