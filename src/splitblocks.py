@@ -103,6 +103,31 @@ def heading_block_to_html_node(block):
             new_list.append(LeafNode(f"h{count}", line.lstrip("# ")))
     return new_list
 
+
+def paragraph_block_to_html_node(block):
+    lines = block.split("\n")
+    new_list = []
+    for line in lines:
+        if len(text_to_textnodes(line)) > 1:
+            new_list.append(ParentNode(f"p", text_to_textnodes(line)))
+        else:
+            new_list.append(LeafNode(f"p", line))
+    return new_list
+
+def code_block_to_html_node(block):
+    return ParentNode(f"pre", [LeafNode("code", block.strip("`"))])
+
+def quote_block_to_html_node(block):
+    lines = block.split("\n")
+    new_list = []
+    for line in lines:
+        if len(text_to_textnodes(line.lstrip("> "))) > 1:
+            new_list.append(ParentNode(f"p", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("> "))))))
+        else:
+            new_list.append(LeafNode(f"p", line.lstrip("> ")))
+    # new_lines = ("\n").join(list(map(lambda x: x.lstrip("> "), lines)))
+    return ParentNode(f"blockquote", new_list)
+
 def markdown_to_html(markdown):
     pass
     # split into blocks using markdown to blocks function
@@ -117,6 +142,8 @@ def markdown_to_html(markdown):
 
 test = """
 #### This is a heading
+# heading 2
+# heading 3
 
 1. With a list
 2. inside of it.
@@ -128,8 +155,25 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
 * This is a list item
 * This is another list item
 """
+
+code_block = """```
+function sayHello() {
+    console.log("Hello");
+    console.log("World");
+}
+```"""
+
+quote = """
+> This is the *first line* of a quote block.
+> This is the **second line** of the quote block.
+"""
+
 print(markdown_to_blocks(test))
 ex = markdown_to_blocks(test)
 first_block = ex[0]
-print(first_block)
-print(heading_block_to_html(first_block)[0])
+third_block = ex[2]
+print(heading_block_to_html_node(first_block))
+print(paragraph_block_to_html_node(third_block))
+print(code_block_to_html_node(code_block).to_html())
+print(quote)
+print(quote_block_to_html_node(quote).to_html())
