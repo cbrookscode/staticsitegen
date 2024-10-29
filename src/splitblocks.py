@@ -125,8 +125,44 @@ def quote_block_to_html_node(block):
             new_list.append(ParentNode(f"p", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("> "))))))
         else:
             new_list.append(LeafNode(f"p", line.lstrip("> ")))
-    # new_lines = ("\n").join(list(map(lambda x: x.lstrip("> "), lines)))
     return ParentNode(f"blockquote", new_list)
+
+
+# capture logic for nested lists
+def unordered_list_to_html_node(block):
+    lines = block.split("\n")
+    new_list = []
+    for line in lines:
+        new_line = line[2:]
+        if len(text_to_textnodes(new_line)) > 1:
+            new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(new_line)))))
+        else:
+            new_list.append(LeafNode(f"li", new_line))
+    return ParentNode(f"ul", new_list)
+
+# capture logic for nested lists
+def ordered_list_to_html(block):
+    lines = block.split("\n")
+    new_list = []
+    count = -1
+    for line in lines:
+        count += 1
+        new_line = line[3:]
+        if line != lines[0]:
+            if line.startswith("\t") or line.startswith("    "):
+                remainder = lines[count:]
+                nested_list = []
+                for r_line in remainder:
+                    if r_line.startswith("    ") and not r_line[4].isspace():
+                        nested_list.append(r_line)
+                new_list[count - 1] = ParentNode(f"li", [LeafNode(value=lines[count - 1][3:]), ordered_list_to_html("\n".join(nested_list))])
+        if len(text_to_textnodes(new_line)) > 1:
+            new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(new_line)))))
+        else:
+            new_list.append(LeafNode(f"li", new_line))
+    return ParentNode(f"ol", new_list)
+
+
 
 def markdown_to_html(markdown):
     pass
@@ -146,14 +182,20 @@ test = """
 # heading 3
 
 1. With a list
+    1. Nested 1
+    2. NEsted 2
 2. inside of it.
 3. oh no!
 
 This is a paragraph of text. It has some **bold** and *italic* words inside of it.
 
-* This is the first list item in a list block
-* This is a list item
-* This is another list item
+> This is the *first line* item in a list block
+> This is **second line** item
+> This is another list item
+
+* This is the *first line* item in a list block
+- This is **second line** item
+- This is another list item
 """
 
 code_block = """```
@@ -171,9 +213,17 @@ quote = """
 print(markdown_to_blocks(test))
 ex = markdown_to_blocks(test)
 first_block = ex[0]
+second_block = ex[1]
 third_block = ex[2]
-print(heading_block_to_html_node(first_block))
-print(paragraph_block_to_html_node(third_block))
-print(code_block_to_html_node(code_block).to_html())
-print(quote)
-print(quote_block_to_html_node(quote).to_html())
+fourth_block = ex[3]
+fifth_block = ex[4]
+print(f"heading block to html: {heading_block_to_html_node(first_block)}")
+print(f"paragraph block to html: {paragraph_block_to_html_node(third_block)}")
+print(f"code block to html: {code_block_to_html_node(code_block).to_html()}")
+print(f"This is the quote: {quote}")
+print(f"quote block to html: {quote_block_to_html_node(fourth_block).to_html()}")
+print(f"this is the fifth block: {(fifth_block)}")
+print(f"split: {fifth_block.split("\n")[0].lstrip("- ").lstrip("* ")}")
+print(f"unordered list block to html: {unordered_list_to_html_node(fifth_block).to_html()}")
+print(f"this is the second block: {(second_block)}")
+print(f"ordered list block to html: {ordered_list_to_html(second_block).to_html()}")
