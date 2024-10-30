@@ -7,6 +7,7 @@ class ParentNode(HTMLNode):
             raise ValueError("ParentNode must have children.")
         if not self.tag:
             raise ValueError("Parent must have a tag")
+        self.children = children
 
     def to_html(self):
         html = ""
