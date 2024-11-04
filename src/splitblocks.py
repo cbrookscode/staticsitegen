@@ -1,6 +1,7 @@
 from inline import text_to_textnodes
 from leafnode import LeafNode
 from parentnode import ParentNode
+from textnode import TextNode
 
 def markdown_to_blocks(markdown):
     if not markdown:
@@ -8,53 +9,66 @@ def markdown_to_blocks(markdown):
     final = []
     for block in markdown.split("\n\n"):
         if block.strip():
-            final.append(block.strip())
+            if block.startswith("\n# ") or block.startswith("# "):
+                if len(block.split("\n")) > 1:
+                    mult_headings = block.split("\n")
+                    for heading in mult_headings:
+                        if heading:
+                            final.append(heading.strip())        
+            else:
+                final.append(block.strip())
     return final
 
+
 # Heading needs to start with a # and be proceeded by a space. However, the heading can be up to 6 hashes followed by a space instead of just one hash only.
-def is_heading(list_of_markdown):
-    if list_of_markdown[0][0] == "#":
-        for line in list_of_markdown:
-            count = 0
-            for char in line:
-                if char == "#":
-                    count += 1
-                elif count == 7:
-                    return False
-                elif char == " " and 1<= count <=6:
-                    break
-                else:
-                    return False
-        return True
+def is_heading(line):
+    if line[0] == "#":
+        count = 0
+        for char in line:
+            if char == "#":
+                count += 1
+            elif count == 7:
+                return False
+            elif char == " " and 1<= count <=6:
+                break
+            else:
+                return False
+        return True    
     else:
         return False
     
-def is_code(list_of_markdown):
+def is_code(block):
+    list_of_markdown = block.split("\n")
     if list_of_markdown[0][0:3] == "```":
         for line in list_of_markdown:
             if line[0:3] != "```" or line[-3:] != "```":
                 return False
         return True
     
-def is_quote(list_of_markdown):
+def is_quote(block):
+    list_of_markdown = block.split("\n")
     if list_of_markdown[0][0] == ">":
         for line in list_of_markdown:
             if line[0] != ">":
                 return False
         return True
     
-def is_unordered_list(list_of_markdown):
+def is_unordered_list(block):
+    list_of_markdown = block.split("\n")
     if list_of_markdown[0][0:2] == "* " or list_of_markdown[0][0:2] == "- ":
         for line in list_of_markdown:
-            if line[0:2] != "* ":
-                if line[0:2] != "- ":
+            stripped_line = line.lstrip(" ")
+            if stripped_line[0:2] != "* ":
+                if stripped_line[0:2] != "- ":
                     return False
         return True
-def is_orderedlist(list_of_markdown):
+def is_orderedlist(block):
+    list_of_markdown = block.split("\n")
     if list_of_markdown[0][0].isdigit():
         for line in list_of_markdown:
+            stripped_line = line.lstrip(" ")
             count = 0
-            for char in line:
+            for char in stripped_line:
                 if not char.isdigit():
                     if char == ".":
                         if line[count + 1] != " ":
@@ -70,18 +84,15 @@ def is_orderedlist(list_of_markdown):
 def block_to_block_type(block_of_markdown):
     if not block_of_markdown:
         raise Exception("No markdown provided!")
-    if len(block_of_markdown) == 1:
-        return "paragraph"
-    split = block_of_markdown.split("\n")
-    if is_heading(split):
+    if is_heading(block_of_markdown):
         return "heading"
-    if is_code(split):
+    if is_code(block_of_markdown):
         return "code"
-    if is_quote(split):
+    if is_quote(block_of_markdown):
         return "quote"
-    if is_unordered_list(split):
+    if is_unordered_list(block_of_markdown):
         return "unordered list"
-    if is_orderedlist(split):
+    if is_orderedlist(block_of_markdown):
         return "ordered list"
     # Didn't find supported type so default to paragraph
     else:
@@ -89,7 +100,6 @@ def block_to_block_type(block_of_markdown):
 
 def heading_block_to_html_node(block):
     lines = block.split("\n")
-    new_list = []
     for line in lines:
         count = 0
         for char in line:
@@ -97,11 +107,7 @@ def heading_block_to_html_node(block):
                 count += 1
             else:
                 break
-        if len(text_to_textnodes(line)) > 1:
-            new_list.append(ParentNode(f"h{count}", text_to_textnodes(line.lstrip("# "))))
-        else:
-            new_list.append(LeafNode(f"h{count}", line.lstrip("# ")))
-    return new_list
+        return ParentNode(f"h{count}", text_to_textnodes(line.lstrip("# ")))
 
 
 def paragraph_block_to_html_node(block):
@@ -109,10 +115,11 @@ def paragraph_block_to_html_node(block):
     new_list = []
     for line in lines:
         if len(text_to_textnodes(line)) > 1:
-            new_list.append(ParentNode(f"p", text_to_textnodes(line)))
+            for node in text_to_textnodes(line):
+                new_list.append(node)
         else:
-            new_list.append(LeafNode(f"p", line))
-    return new_list
+            new_list.append(TextNode(line, "text"))
+    return ParentNode("p", new_list)
 
 def code_block_to_html_node(block):
     return ParentNode(f"pre", [LeafNode("code", block.strip("`"))])
@@ -121,10 +128,7 @@ def quote_block_to_html_node(block):
     lines = block.split("\n")
     new_list = []
     for line in lines:
-        if len(text_to_textnodes(line.lstrip("> "))) > 1:
-            new_list.append(ParentNode(f"p", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("> "))))))
-        else:
-            new_list.append(LeafNode(f"p", line.lstrip("> ")))
+        new_list.append(ParentNode(f"p", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("> "))))))
     return ParentNode(f"blockquote", new_list)
 
 
@@ -137,24 +141,19 @@ def unordered_list_to_html_node(block):
         new_line = line[2:]
         if line != lines[0]:
             if line.startswith("\t") or line.startswith("    "):
-                node, index = nested_list_helper("\n".join(lines[count:]), count, "unordered")
+                nested_level = len(line.split("    "))
+                node, index = nested_list_helper("\n".join(lines[count:]), "unordered", nested_level, count)
                 parent_node = new_list.pop()
                 if isinstance(parent_node, ParentNode):
-                    childlist = []
-                    for child in parent_node.children:
-                        childlist.append(child)
-                    childlist.append(node)
-                    new_list.append(ParentNode(f"li", childlist))
+                    parent_node.children.append(node)
+                    new_list.append(parent_node)
                 else:
-                    new_list.append(ParentNode(f"li", [LeafNode(value=parent_node.value), node]))
+                    new_list.append(ParentNode(f"ul", [LeafNode(value=parent_node.value), node]))
                 count = index
                 continue
-        if len(text_to_textnodes(new_line)) > 1:
-            new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(new_line)))))
-            count += 1
-        else:
-            new_list.append(LeafNode(f"li", new_line))
-            count += 1
+        nested_level = 0
+        new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(new_line)))))
+        count += 1
     return ParentNode(f"ul", new_list)
 
 def ordered_list_to_html(block):
@@ -164,89 +163,105 @@ def ordered_list_to_html(block):
     while count < len(lines):
         line = lines[count]
         new_line = line[3:]
+        nested_level = 0
         if line != lines[0]:
             if line.startswith("\t") or line.startswith("    "):
-                node, index = nested_list_helper("\n".join(lines[count:]), count, "ordered")
+                nested_level = len(line.split("    "))
+                node, index = nested_list_helper("\n".join(lines[count:]), "ordered", nested_level, count)
                 parent_node = new_list.pop()
                 if isinstance(parent_node, ParentNode):
-                    childlist = []
-                    for child in parent_node.children:
-                        childlist.append(child)
-                    childlist.append(node)
-                    new_list.append(ParentNode(f"li", childlist))
+                    parent_node.children.append(node)
+                    new_list.append(parent_node)
                 else:
-                    new_list.append(ParentNode(f"li", [LeafNode(value=parent_node.value), node]))
+                    new_list.append(ParentNode(f"ol", [LeafNode(value=parent_node.value), node]))
                 count = index
                 continue
-        if len(text_to_textnodes(new_line)) > 1:
-            new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(new_line)))))
-            count += 1
-        else:
-            new_list.append(LeafNode(f"li", new_line))
-            count += 1
+        new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(new_line)))))
+        count += 1
     return ParentNode(f"ol", new_list)
 
-def nested_list_helper(text, index, list_type):
-    new_index = index
+def nested_list_helper(text, list_type, nested_level, index):
     lines = text.split("\n")
     new_list = []
+    new_index = index
+    num = 0
+    tag_text = ""
     if list_type == "ordered":
-        for line in lines:
-            if line.startswith("    ") or line.startswith("\t"):
-                if len(line.split("    ")) == 2:
-                    if len(text_to_textnodes(line.lstrip("    ")[3:])) > 1:
-                        new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("    ")[3:])))))
-                    else:
-                        new_list.append(LeafNode("li", line.lstrip("    ")[3:]))
-                        new_index += 1
-            else:
-                return ParentNode("ol", new_list), new_index
-        return ParentNode("ol", new_list), new_index
-    elif list_type == "unordered":
-        for line in lines:
-            if line.startswith("    ") or line.startswith("\t"):
-                if len(line.split("    ")) == 2:
-                    if len(text_to_textnodes(line.lstrip("    ")[2:])) > 1:
-                        new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("    ")[2:])))))
-                    else:
-                        new_list.append(LeafNode("li", line.lstrip("    ")[2:]))
-                        new_index += 1
-            else:
-                return ParentNode("ul", new_list), new_index
-        return ParentNode("ul", new_list), new_index
+        num = 3
+        tag_text = "ol"
+    if list_type == "unordered":
+        num = 2
+        tag_text = "ul"
 
-
-
+    i = 0
+    while i < len(lines):
+        current_level = len(lines[i].split("    "))
+        if lines[i].startswith("    ") or lines[i].startswith("\t"):
+            if current_level == nested_level:
+                if len(text_to_textnodes(lines[i].lstrip("    ")[num:])) > 1:
+                    new_list.append(ParentNode(f"li", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(lines[i].lstrip("    ")[num:])))))
+                else:
+                    new_list.append(LeafNode("li", lines[i].lstrip("    ")[num:]))
+                new_index += 1
+                i += 1
+            elif current_level > nested_level:
+                node, end_index = nested_list_helper("\n".join(lines[new_index-1:]), list_type, current_level, new_index)
+                leaf = new_list.pop()
+                new_list.append(ParentNode(f"li", [LeafNode(value=leaf.value), node]))
+                new_index = end_index
+                i = end_index - index
+        else:
+            break
+    return ParentNode(tag_text, new_list), new_index
+        
 def markdown_to_html(markdown):
-    pass
     # split into blocks using markdown to blocks function
     blocks = markdown_to_blocks(markdown)
-    # lopo through the returned list of blocks and determine wwhat type the block is with block to block type function
+    # loop through the returned list of blocks and determine wwhat type the block is with block to block type function
+    html_list = []
     for block in blocks:
         type_of_block = block_to_block_type(block)
-    # once you know what type of block you are in, convert that block to an htmlnode. assign the proper children to that block (use an additional function to help with this)
-
-    # make sure all blocks looped through then go under a single parent htmlnode which should just be a div and then return it.
-    # return one html node that then contains the tree of html nodes
+        # once you know what type of block you are in, convert that block to an htmlnode. assign the proper children to that block (use an additional function to help with this)
+        if type_of_block == "paragraph":
+            html_list.append(paragraph_block_to_html_node(block))
+        elif type_of_block == "heading":
+            html_list.append(heading_block_to_html_node(block))
+        elif type_of_block == "code":
+            html_list.append(code_block_to_html_node(block))
+        elif type_of_block == "quote":
+            html_list.append(quote_block_to_html_node(block))
+        elif type_of_block == "unordered list":
+            html_list.append(unordered_list_to_html_node(block))
+        elif type_of_block == "ordered list":
+            html_list.append(ordered_list_to_html(block))
+    return ParentNode("div", html_list)
 
 test = """
-#### This is a heading
-# heading 2
-# heading 3
+# This is a heading
+## heading 2
+### heading 3
 
 1. *With* a list
     1. Nested 1
     2. NEsted 2
+        1. Triple nest!
+        3. Hiiya!
 2. inside of it.
 3. oh no!
 
 This is a paragraph of text. It has some **bold** and *italic* words inside of it.
 
-> This is the *first line* item in a list block
-> This is **second line** item
-> This is another list item
+> This is the *first line* of a quote block.
+> This is the **second line** of the quote block.
 
-* This is the *first line* item in a list block
+```
+function sayHello() {
+    console.log("Hello");
+    console.log("World");
+}
+```
+
+* This is the *first line* item in a unordered list block
     * Hi 1
     - Hi 2
         * second indent line
@@ -255,33 +270,3 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
 - This is another list item
 """
 
-code_block = """```
-function sayHello() {
-    console.log("Hello");
-    console.log("World");
-}
-```"""
-
-quote = """
-> This is the *first line* of a quote block.
-> This is the **second line** of the quote block.
-"""
-
-print(markdown_to_blocks(test))
-ex = markdown_to_blocks(test)
-first_block = ex[0]
-second_block = ex[1]
-third_block = ex[2]
-fourth_block = ex[3]
-fifth_block = ex[4]
-print(f"heading block to html: {heading_block_to_html_node(first_block)}")
-print(f"paragraph block to html: {paragraph_block_to_html_node(third_block)}")
-print(f"code block to html: {code_block_to_html_node(code_block).to_html()}")
-print(f"This is the quote: {quote}")
-print(f"quote block to html: {quote_block_to_html_node(fourth_block).to_html()}")
-print(f"this is the fifth block: {(fifth_block)}")
-print(f"split: {fifth_block.split("\n")[0].lstrip("- ").lstrip("* ")}")
-print(f"unordered list block to html: {unordered_list_to_html_node(fifth_block).to_html()}")
-print(f"this is the second block: {(second_block)}")
-print("        1. Nested Test.".split("    "))
-print(f"ordered list block to html: {ordered_list_to_html(second_block).to_html()}")
