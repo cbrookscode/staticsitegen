@@ -1,4 +1,4 @@
-from splitblocks import markdown_to_blocks, block_to_block_type
+from splitblocks import markdown_to_blocks, block_to_block_type, markdown_to_html
 import unittest
 
 markdown_empty = ""
@@ -161,9 +161,9 @@ test22 = "This is the first list item in a list block\n2. This is a list item\n3
 test23 = "25555555555. This is the first list item in a list block\n2. This is a list item\n3000000000000. This is another list item'"
 test24 = "25555555555. This is the first list item in a list block\n20.This is a list item\n3000000000000. This is another list item'"
 test25 = "25555555555. This is the first list item in a list block\n20. This is a list item\n3000000000000. This is another list item'"
-test26 = "# Heading1\n# Heading2!"
-test27 = "# Heading1\n#Heading2!"
-test28 = "# Heading1\nwowowowoow"
+test26 = "# Heading2! 25555555555. This is the first list item in a list block\n20. This is a list item\n3000000000000."
+test27 = "#Heading2!"
+test28 = "nwowowowoow"
 
 
 
@@ -202,4 +202,26 @@ class TestBlockToBlockType(unittest.TestCase):
         for inp, expected in test_cases:
             with self.subTest(inp=inp, expected=expected):
                 result = block_to_block_type(inp)
+                self.assertEqual(result, expected)
+
+
+#Tests for markdown to html
+markdowntohtmltest1 = """
+# Heading 1
+
+
+"""
+
+#Expected Results for markdown to html
+markdowntohtmlresult1 = 
+
+class TestMarkdown_to_html(unittest.TestCase):
+
+    def test_all(self):
+        test_cases = [
+            (markdowntohtmltest1, markdowntohtmlresult1),
+        ]
+        for inp, expected in test_cases:
+            with self.subTest(inp=inp, expected=expected):
+                result = markdown_to_html(inp)
                 self.assertEqual(result, expected)

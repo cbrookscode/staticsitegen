@@ -9,19 +9,13 @@ def markdown_to_blocks(markdown):
     final = []
     for block in markdown.split("\n\n"):
         if block.strip():
-            if block.startswith("\n# ") or block.startswith("# "):
-                if len(block.split("\n")) > 1:
-                    mult_headings = block.split("\n")
-                    for heading in mult_headings:
-                        if heading:
-                            final.append(heading.strip())        
-            else:
                 final.append(block.strip())
     return final
 
-
 # Heading needs to start with a # and be proceeded by a space. However, the heading can be up to 6 hashes followed by a space instead of just one hash only.
 def is_heading(line):
+    if len(line) <= 1:
+        return False
     if line[0] == "#":
         count = 0
         for char in line:
@@ -236,37 +230,18 @@ def markdown_to_html(markdown):
             html_list.append(ordered_list_to_html(block))
     return ParentNode("div", html_list)
 
-test = """
+
+markdown_one_block = """
 # This is a heading
-## heading 2
-### heading 3
-
-1. *With* a list
-    1. Nested 1
-    2. NEsted 2
-        1. Triple nest!
-        3. Hiiya!
-2. inside of it.
-3. oh no!
-
 This is a paragraph of text. It has some **bold** and *italic* words inside of it.
-
-> This is the *first line* of a quote block.
-> This is the **second line** of the quote block.
-
-```
-function sayHello() {
-    console.log("Hello");
-    console.log("World");
-}
-```
-
-* This is the *first line* item in a unordered list block
-    * Hi 1
-    - Hi 2
-        * second indent line
-        * second indent line
-- This is **second line** item
-- This is another list item
+* This is the first list item in a list block
+* This is a list item
+* This is another list item
+## Heading 2
+* This is the first list item in a list block
+* This is a list item
+* This is another list item
+# Wow, just wow.
 """
 
+print(f"Markdown to html one block: {markdown_to_html(markdown_one_block)}")
