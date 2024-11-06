@@ -1,4 +1,6 @@
 from splitblocks import markdown_to_blocks, block_to_block_type, markdown_to_html
+from parentnode import ParentNode
+from textnode import TextNode
 import unittest
 
 markdown_empty = ""
@@ -205,23 +207,41 @@ class TestBlockToBlockType(unittest.TestCase):
                 self.assertEqual(result, expected)
 
 
-#Tests for markdown to html
-markdowntohtmltest1 = """
-# Heading 1
 
 
-"""
-
+textnodes_list = [
+    TextNode("This is a heading\nThis is a paragraph of text. It has some ", "text", None), 
+    TextNode("bold", "bold", None), 
+    TextNode(" and ", "text", None), 
+    TextNode("italic", "italic", None), 
+    TextNode(" words inside of it.\n", "text", None), 
+    TextNode(" This is the first list item in a list block\n", "italic", None), 
+    TextNode(" This is a list item\n", "text", None), 
+    TextNode(" This is another list item\n## Heading 2\n", "italic", None), 
+    TextNode(" This is the first list item in a list block\n", "text", None), 
+    TextNode(" This is a list item\n", "italic", None), 
+    TextNode(" This is another list item\n# Wow, just wow.", "text", None)
+                  ]
 #Expected Results for markdown to html
-markdowntohtmlresult1 = 
+markdowntohtmlexpectedresult1 = ParentNode("div", [ParentNode("h1", list(map(lambda x: x.text_node_to_html_node(), textnodes_list)), None)], None).to_html()
+markdowntohtmlexpectedresult2 = "<div><h1>This is a heading</h1><p>This is a paragraph of text. It has some <b>bold</b> and <i>italic</i> words inside of it.</p><ul><li>This is the first list item in a list block</li><li>This is a list item</li><li>This is another list item</li></ul><h2>Heading 2</h2><ul><li>This is the first list item in a list block</li><li>This is a list item</li><li>This is another list item</li></ul><h1>Wow, just wow.</h1></div>"
+markdowntohtmlexpectedresult3 = "<div><h1>This is a heading</h1><p>This is a paragraph of text. It has some <b>bold</b> and <i>italic</i> words inside of it.</p><ul><li>This is the first list item in a list block</li><li>This is a list item</li><li>This is another list item</li></ul><h2>Heading 2</h2><ul><li>This is the first list item in a list block</li><li>This is a list item</li><li>This is another list item</li></ul><h1>Wow, just wow.</h1></div>"
+markdowntohtmlexpectedresult4 = "<div><h1>This is a heading</h1><p>This is a paragraph of text. It has some <b>bold</b> and <i>italic</i> words inside of it.</p><ul><li>This is the first list item in a list block</li><li>This is a list item</li><li>This is another list item</li></ul><h2>Heading 2</h2><ul><li>This is the first list item in a list block</li><li>This is a list item</li></ul><ul><li>This is another list item</li></ul><h1>Wow, just wow.</h1></div>"
+
 
 class TestMarkdown_to_html(unittest.TestCase):
 
     def test_all(self):
         test_cases = [
-            (markdowntohtmltest1, markdowntohtmlresult1),
+            (markdown_one_block, markdowntohtmlexpectedresult1),
+             (markdown_expected, markdowntohtmlexpectedresult2),
+             (markdown_multiple_sets_of_blank_rows_leading_and_trailing, markdowntohtmlexpectedresult3),
+             (markdown_text_crazy_mix, markdowntohtmlexpectedresult4),
         ]
+        count = 0
         for inp, expected in test_cases:
             with self.subTest(inp=inp, expected=expected):
-                result = markdown_to_html(inp)
+                count += 1
+                result = markdown_to_html(inp).to_html()
                 self.assertEqual(result, expected)
+                print(f"{count}: {result}")

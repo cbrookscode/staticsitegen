@@ -92,27 +92,22 @@ def block_to_block_type(block_of_markdown):
     else:
         return "paragraph"
 
-def heading_block_to_html_node(block):
-    lines = block.split("\n")
-    for line in lines:
-        count = 0
-        for char in line:
-            if "#" == char:
-                count += 1
-            else:
-                break
-        return ParentNode(f"h{count}", text_to_textnodes(line.lstrip("# ")))
+def heading_block_to_html_node(line):
+    count = 0
+    for char in line:
+        if "#" == char:
+            count += 1
+        else:
+            break
+    return ParentNode(f"h{count}", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("# ")))))
 
 
 def paragraph_block_to_html_node(block):
     lines = block.split("\n")
     new_list = []
     for line in lines:
-        if len(text_to_textnodes(line)) > 1:
-            for node in text_to_textnodes(line):
-                new_list.append(node)
-        else:
-            new_list.append(TextNode(line, "text"))
+        for htmlnode in list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line))):
+            new_list.append(htmlnode)
     return ParentNode("p", new_list)
 
 def code_block_to_html_node(block):
@@ -230,18 +225,3 @@ def markdown_to_html(markdown):
             html_list.append(ordered_list_to_html(block))
     return ParentNode("div", html_list)
 
-
-markdown_one_block = """
-# This is a heading
-This is a paragraph of text. It has some **bold** and *italic* words inside of it.
-* This is the first list item in a list block
-* This is a list item
-* This is another list item
-## Heading 2
-* This is the first list item in a list block
-* This is a list item
-* This is another list item
-# Wow, just wow.
-"""
-
-print(f"Markdown to html one block: {markdown_to_html(markdown_one_block)}")
