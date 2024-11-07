@@ -244,4 +244,4 @@ class TestMarkdown_to_html(unittest.TestCase):
                 count += 1
                 result = markdown_to_html(inp).to_html()
                 self.assertEqual(result, expected)
-                print(f"{count}: {result}")
+                """ print(f"{count}: {result}") """

@@ -32,12 +32,11 @@ def is_heading(line):
         return False
     
 def is_code(block):
-    list_of_markdown = block.split("\n")
-    if list_of_markdown[0][0:3] == "```":
-        for line in list_of_markdown:
-            if line[0:3] != "```" or line[-3:] != "```":
-                return False
+    test = block.strip(" ")
+    if block.strip(" ")[0:3] == "```" and block.strip(" ")[-3:] == "```":
         return True
+    else:
+        return False
     
 def is_quote(block):
     list_of_markdown = block.split("\n")
@@ -117,7 +116,8 @@ def quote_block_to_html_node(block):
     lines = block.split("\n")
     new_list = []
     for line in lines:
-        new_list.append(ParentNode(f"p", list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("> "))))))
+        for node in list(map(lambda x: x.text_node_to_html_node(), text_to_textnodes(line.lstrip("> ")))):
+            new_list.append(node)
     return ParentNode(f"blockquote", new_list)
 
 
@@ -224,4 +224,3 @@ def markdown_to_html(markdown):
         elif type_of_block == "ordered list":
             html_list.append(ordered_list_to_html(block))
     return ParentNode("div", html_list)
-
