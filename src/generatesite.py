@@ -42,3 +42,14 @@ def generate_page(from_path, template_path, dest_path):
             with open(f"{dest_path}/index.html", 'w') as e:
                 e.write(new_index_html_file)
     
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    source_contents = os.listdir(dir_path_content)
+    for item in source_contents:
+        if not os.path.isfile(f"{dir_path_content}/{item}"):
+            os.mkdir(f"{dest_dir_path}/{item}")
+            generate_pages_recursive(f"{dir_path_content}/{item}", template_path, f"{dest_dir_path}/{item}")
+            continue
+        else:
+            if item[-3:] == ".md":
+                generate_page(f"{dir_path_content}/{item}", template_path, dest_dir_path)
